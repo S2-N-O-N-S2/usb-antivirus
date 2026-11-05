@@ -13,6 +13,7 @@ config/whitelist.json
 # ── Build de PyInstaller ──────────────────────────────────────────────────────
 build_temp/
 dist_temp/
+dist_debug/
 LISTO_PARA_USB/
 *.spec
 
