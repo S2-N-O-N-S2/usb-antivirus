@@ -1,0 +1,12 @@
+# USB Antivirus — dependencias Python
+# Instalar con: pip install -r requirements.txt
+
+# PyInstaller para empaquetar en .exe
+pyinstaller==6.10.0
+
+# Tkinter viene incluido en Python estándar para Windows.
+# No requiere instalación adicional.
+
+# Sin dependencias de red, sin APIs externas.
+# Todos los demás módulos usados (subprocess, sqlite3, json, csv,
+# hashlib, logging, pathlib, threading, ctypes) son de la biblioteca estándar.
