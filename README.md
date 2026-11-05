@@ -81,7 +81,7 @@ USB_Antivirus/
 ### 1. Clonar el repositorio
 
 ```powershell
-git clone https://github.com/TU_USUARIO/usb-antivirus.git
+git clone https://github.com/S2-N-O-N-S2/usb-antivirus.git
 cd usb-antivirus
 ```
 
