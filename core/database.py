@@ -187,3 +187,111 @@ def update_quarantine_status(quarantine_id: int, status: str):
                 "UPDATE quarantine_log SET status=? WHERE id=?",
                 (status, quarantine_id),
             )
+
+
+# ── Métricas ───────────────────────────────────────────────────────────────────
+
+def get_global_stats() -> dict:
+    """Totales acumulados de todos los análisis completados."""
+    with _connect() as conn:
+        row = conn.execute("""
+            SELECT
+                COUNT(*)                        AS total_scans,
+                COALESCE(SUM(files_scanned), 0) AS total_files,
+                COALESCE(SUM(threats_found), 0) AS total_threats,
+                COALESCE(SUM(errors), 0)        AS total_errors,
+                COALESCE(SUM(elapsed_sec), 0)   AS total_elapsed,
+                COALESCE(AVG(elapsed_sec), 0)   AS avg_elapsed,
+                SUM(CASE WHEN threats_found = 0 AND status = 'completed'
+                         THEN 1 ELSE 0 END)     AS clean_scans
+            FROM scans
+            WHERE status IN ('completed', 'cancelled')
+        """).fetchone()
+        q_row = conn.execute("""
+            SELECT
+                COUNT(*) AS total_quarantined,
+                SUM(CASE WHEN status = 'restored' THEN 1 ELSE 0 END) AS total_restored,
+                SUM(CASE WHEN status = 'deleted'  THEN 1 ELSE 0 END) AS total_deleted
+            FROM quarantine_log
+        """).fetchone()
+    result = dict(row) if row else {}
+    result.update(dict(q_row) if q_row else {})
+    return result
+
+
+def get_threats_by_category() -> list[dict]:
+    """Conteo de detecciones agrupadas por categoría (top 10)."""
+    with _connect() as conn:
+        rows = conn.execute("""
+            SELECT
+                COALESCE(category, 'No determinada') AS category,
+                COUNT(*) AS count
+            FROM detections
+            GROUP BY category
+            ORDER BY count DESC
+            LIMIT 10
+        """).fetchall()
+    return [dict(r) for r in rows]
+
+
+def get_threats_by_risk() -> list[dict]:
+    """Conteo de detecciones agrupadas por nivel de riesgo (0-5)."""
+    with _connect() as conn:
+        rows = conn.execute("""
+            SELECT
+                COALESCE(risk_level, 3)  AS risk_level,
+                COALESCE(risk_label, '?') AS risk_label,
+                COUNT(*) AS count
+            FROM detections
+            GROUP BY risk_level
+            ORDER BY risk_level DESC
+        """).fetchall()
+    return [dict(r) for r in rows]
+
+
+def get_top_extensions(limit: int = 8) -> list[dict]:
+    """Extensiones de archivo más frecuentes en detecciones."""
+    with _connect() as conn:
+        rows = conn.execute("""
+            SELECT
+                COALESCE(NULLIF(file_ext, ''), '(sin ext)') AS ext,
+                COUNT(*) AS count
+            FROM detections
+            GROUP BY file_ext
+            ORDER BY count DESC
+            LIMIT ?
+        """, (limit,)).fetchall()
+    return [dict(r) for r in rows]
+
+
+def get_scan_trend(limit: int = 20) -> list[dict]:
+    """Últimos N análisis completados con fecha, archivos y amenazas (para gráfica)."""
+    with _connect() as conn:
+        rows = conn.execute("""
+            SELECT
+                id,
+                SUBSTR(started_at, 1, 10)  AS date,
+                scan_type,
+                files_scanned,
+                threats_found,
+                elapsed_sec,
+                status
+            FROM scans
+            WHERE status IN ('completed', 'cancelled')
+            ORDER BY id DESC
+            LIMIT ?
+        """, (limit,)).fetchall()
+    return list(reversed([dict(r) for r in rows]))
+
+
+def get_scan_type_breakdown() -> list[dict]:
+    """Conteo de análisis por tipo."""
+    with _connect() as conn:
+        rows = conn.execute("""
+            SELECT scan_type, COUNT(*) AS count
+            FROM scans
+            WHERE status IN ('completed', 'cancelled')
+            GROUP BY scan_type
+            ORDER BY count DESC
+        """).fetchall()
+    return [dict(r) for r in rows]

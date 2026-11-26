@@ -95,6 +95,12 @@ class FinishPanel(tk.Toplevel):
         stats_frame = tk.Frame(self, bg=BG_DARK, padx=24, pady=16)
         stats_frame.pack(fill="x")
 
+        # Métricas derivadas
+        _speed = (r.files_scanned / r.elapsed_sec) if r.elapsed_sec > 0 else 0
+        _speed_str = f"{_speed:,.0f} arch/s" if _speed >= 1 else "< 1 arch/s"
+        _rate  = (r.threats_found / r.files_scanned * 100) if r.files_scanned > 0 else 0
+        _rate_str = f"{_rate:.3f}%" if r.files_scanned > 0 else "—"
+
         stats = [
             ("📁 Archivos examinados", f"{r.files_scanned:,}",  TEXT_PRI),
             ("⚠ Amenazas detectadas", str(r.threats_found),
@@ -102,7 +108,12 @@ class FinishPanel(tk.Toplevel):
             ("❌ Errores",              str(r.errors),
              WARN if r.errors > 0 else TEXT_SEC),
             ("⏱ Tiempo total",         _fmt_elapsed(r.elapsed_sec), ACCENT2),
+            ("⚡ Velocidad",            _speed_str,                ACCENT),
+            ("🎯 Tasa de detección",    _rate_str,
+             DANGER if _rate > 0 else OK),
             ("🔧 Workers usados",       str(r.workers_used),       TEXT_SEC),
+            ("⏭ Archivos omitidos",    str(r.files_skipped),
+             WARN if r.files_skipped > 0 else TEXT_SEC),
             ("📅 Tipo de análisis",     r.scan_type,               TEXT_SEC),
         ]
 

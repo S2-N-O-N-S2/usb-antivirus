@@ -20,6 +20,7 @@ Motor: ClamAV 1.5.4 · Python 3 · Tkinter · SQLite
 - Reportes en JSON, TXT y CSV
 - Historial de análisis en SQLite local
 - Lista blanca por SHA-256
+- **Panel de métricas históricas** con estadísticas acumuladas y gráficas
 - 100% offline — no transmite datos al exterior
 - Sin instalación — corre directamente desde USB
 
@@ -46,10 +47,11 @@ USB_Antivirus/
 │   ├── main_window.py         Ventana principal
 │   ├── scan_panel.py          Panel lateral con progreso
 │   ├── detections_table.py    Tabla de amenazas detectadas
-│   ├── finish_panel.py        Panel de resumen al terminar
+│   ├── finish_panel.py        Panel de resumen al terminar (con métricas de velocidad y tasa)
 │   ├── errors_panel.py        Panel de archivos con errores
 │   ├── quarantine_window.py   Gestión de cuarentena
 │   ├── report_window.py       Historial de análisis
+│   ├── dashboard_window.py    Panel de métricas históricas
 │   └── settings_window.py     Configuración
 │
 ├── utils/
@@ -161,6 +163,51 @@ Las firmas se actualizan varias veces al día. Para actualizar:
 
 Coloca archivos `.yar` o `.yara` en `clamav\yara\` para ampliar la detección.  
 Fuentes gratuitas: [Yara-Rules](https://github.com/Yara-Rules/rules), [Neo23x0](https://github.com/Neo23x0/signature-base)
+
+---
+
+## Panel de métricas
+
+Accede desde **Archivo → 📊 Métricas** o desde el botón de la cabecera principal.
+
+El panel muestra estadísticas acumuladas de todos los análisis realizados con esa USB:
+
+### Resumen global
+| Métrica | Descripción |
+|---|---|
+| Análisis realizados | Total de análisis completados o cancelados |
+| Archivos examinados | Suma de todos los archivos procesados |
+| Amenazas detectadas | Total histórico de detecciones |
+| Tasa de detección | `amenazas / archivos × 100` — indica qué tan infectados han estado los dispositivos analizados |
+| Análisis sin amenazas | Conteo y porcentaje de análisis completamente limpios |
+| En cuarentena | Archivos aislados actualmente |
+| Tiempo total acumulado | Suma de todas las duraciones de análisis |
+| Duración media | Tiempo promedio por análisis |
+| Errores acumulados | Archivos que no pudieron analizarse por permisos o bloqueo del SO |
+
+### Tendencia (últimos 20 análisis)
+- Tres sparklines: archivos escaneados, amenazas detectadas y duración en segundos
+- Tabla compacta con los 10 análisis más recientes (tipo, fecha, archivos, amenazas, tiempo, estado)
+
+### Distribución de amenazas
+- Gráfica de barras horizontales por **categoría** (Ransomware, Troyano, Gusano…)
+- Gráfica de barras horizontales por **nivel de riesgo** (Crítico → Prueba)
+
+### Desglose adicional
+- Extensiones de archivo más frecuentes en detecciones (`.exe`, `.dll`, `.bat`…)
+- Conteo de análisis por tipo con porcentaje (Rápido, USB, Carpeta, Completo…)
+
+> Las gráficas están implementadas con Canvas puro de Tkinter. No requieren `matplotlib` ni ninguna dependencia adicional.
+
+### Métricas en el resumen por análisis
+
+Al finalizar cada análisis, el panel de resultados ahora muestra 9 tarjetas en lugar de 6:
+
+| Nueva métrica | Descripción |
+|---|---|
+| ⚡ Velocidad | Archivos por segundo durante el análisis |
+| 🎯 Tasa de detección | Porcentaje de archivos que resultaron infectados |
+| ⏭ Archivos omitidos | Archivos que no pudieron analizarse |
 
 ---
 

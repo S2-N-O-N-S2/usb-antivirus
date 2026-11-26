@@ -23,6 +23,7 @@ from ui.report_window import ReportWindow
 from ui.settings_window import SettingsWindow
 from ui.errors_panel import ErrorsBadge
 from ui.finish_panel import FinishPanel
+from ui.dashboard_window import DashboardWindow
 from utils.file_utils import get_windows_drives, get_drive_type
 from utils.theme import (
     BG_DARK, BG_PANEL, BG_CARD, BORDER,
@@ -71,6 +72,7 @@ class MainWindow(tk.Tk):
                      borderwidth=0)
         for menu_label, items in [
             ("Archivo", [
+                ("📊  Métricas",      self._open_dashboard),
                 ("🔒  Cuarentena",    self._open_quarantine),
                 ("📋  Reportes",      self._open_reports),
                 None,
@@ -134,6 +136,7 @@ class MainWindow(tk.Tk):
             ("⚙  Config",         self._open_settings),
             ("🔒  Cuarentena",     self._open_quarantine),
             ("📋  Reportes",       self._open_reports),
+            ("📊  Métricas",       self._open_dashboard),
         ]:
             b = btn_secondary(nav, text, cmd)
             b.pack(side="right", padx=3, pady=12)
@@ -578,6 +581,7 @@ class MainWindow(tk.Tk):
     def _open_quarantine(self): QuarantineWindow(self)
     def _open_reports(self):    ReportWindow(self)
     def _open_settings(self):   SettingsWindow(self, on_save=self._check_engine)
+    def _open_dashboard(self):  DashboardWindow(self)
 
     def _show_update_instructions(self):
         """Muestra instrucciones para actualizar las firmas."""
